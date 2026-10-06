@@ -15,11 +15,7 @@ pg_qualstats collects statistics about predicates used in `WHERE` clauses and `J
 
 pgextwin validates PostgreSQL 14–18 on Windows x64.
 
-The first pgextwin package-set release is planned as:
-
-~~~text
-v2.1.4-windows.1
-~~~
+The current pgextwin package-set release is [`v2.1.4-windows.1`](https://github.com/pgextwin/pg_qualstats/releases/tag/v2.1.4-windows.1).
 
 Assets use explicit PostgreSQL-major names:
 
