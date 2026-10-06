@@ -38,6 +38,50 @@ if ($version -ne "2.1.4") {
 }
 
 $source = Get-Content $sourcePath -Raw
+
+# pg_qualstats 2.1.4 added a compatibility macro for PostgreSQL < 19:
+#   #define ShmemInitHash(n, nelem, i, f) ...
+# Later in pgqs_shmem_startup(), a preprocessor #if/#else appears inside a
+# ShmemInitHash() argument list. GCC accepts that layout, but MSVC treats '#'
+# as an invalid token while collecting macro arguments. Preserve the exact
+# flags while moving the conditional outside the macro invocation in the
+# disposable CI checkout.
+$hashCallOld = @'
+	pgqs_query_examples_hash = ShmemInitHash("pg_qualqueryexamples_hash",
+											 pgqs_max,
+											 &queryinfo,
+
+/* On PG > 9.5, use the HASH_BLOBS optimization for uint32 keys. */
+#if PG_VERSION_NUM >= 90500
+											 HASH_ELEM | HASH_BLOBS | HASH_FIXED_SIZE);
+#else
+											 HASH_ELEM | HASH_FUNCTION | HASH_FIXED_SIZE);
+#endif
+'@
+
+$hashCallNew = @'
+/* On PG > 9.5, use the HASH_BLOBS optimization for uint32 keys. */
+#if PG_VERSION_NUM >= 90500
+	{
+		int query_hash_flags = HASH_ELEM | HASH_BLOBS | HASH_FIXED_SIZE;
+#else
+	{
+		int query_hash_flags = HASH_ELEM | HASH_FUNCTION | HASH_FIXED_SIZE;
+#endif
+
+		pgqs_query_examples_hash = ShmemInitHash("pg_qualqueryexamples_hash",
+											 pgqs_max,
+											 &queryinfo,
+											 query_hash_flags);
+	}
+'@
+
+if (-not $source.Contains($hashCallOld)) {
+    throw "Expected pg_qualstats 2.1.4 ShmemInitHash block was not found; review upstream before continuing."
+}
+$source = $source.Replace($hashCallOld, $hashCallNew)
+[IO.File]::WriteAllText($sourcePath, $source, [Text.UTF8Encoding]::new($false))
+
 $exports = @("Pg_magic_func", "_PG_init")
 foreach ($match in [regex]::Matches($source, 'PG_FUNCTION_INFO_V1\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)')) {
     $functionName = $match.Groups[1].Value
