@@ -99,7 +99,11 @@ SELECT count(*) FROM public.pgextwin_pgqs_probe WHERE id > 900;
         throw "pg_qualstats did not collect the payload predicate."
     }
 
-    $prettyCount = ((& $psql -h 127.0.0.1 -p $PgPort -U postgres -d postgres -Atqc "SELECT count(*) FROM pg_qualstats_pretty WHERE left_table = 'pgextwin_pgqs_probe';") | Select-Object -Last 1).Trim()
+    $prettyOutput = @(& $psql -h 127.0.0.1 -p $PgPort -U postgres -d postgres -Atqc "SELECT count(*) FROM pg_qualstats_pretty WHERE left_table::oid = 'public.pgextwin_pgqs_probe'::regclass::oid;")
+    if ($LASTEXITCODE -ne 0) {
+        throw "pg_qualstats_pretty validation query failed."
+    }
+    $prettyCount = (($prettyOutput | Select-Object -Last 1) -as [string]).Trim()
     if ([int]$prettyCount -lt 1) {
         throw "pg_qualstats_pretty did not expose the collected predicate."
     }
