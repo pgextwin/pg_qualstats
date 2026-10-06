@@ -15,11 +15,7 @@ pg_qualstatsは、SQLの `WHERE` 条件や `JOIN` 条件に現れるpredicate（
 
 pgextwinではPostgreSQL 14〜18をWindows x64で検証します。
 
-初回Release tagは次を予定しています。
-
-~~~text
-v2.1.4-windows.1
-~~~
+現在のpgextwin Releaseは [`v2.1.4-windows.1`](https://github.com/pgextwin/pg_qualstats/releases/tag/v2.1.4-windows.1) です。
 
 ZIP名:
 
