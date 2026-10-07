@@ -1,0 +1,42 @@
+{
+  "contractVersion": 2,
+  "extension": "pg_qualstats",
+  "smokeTest": {
+    "script": "windows/ci/smoke-test.ps1"
+  },
+  "runtimeRequirements": {
+    "extensionCreation": "required",
+    "preload": "shared",
+    "backgroundWorker": false,
+    "clientExecutable": {
+      "required": false,
+      "packagePaths": []
+    }
+  },
+  "testSetup": {
+    "preload": "shared",
+    "backgroundWorker": false,
+    "settings": [
+      {
+        "name": "pg_qualstats.sample_rate",
+        "value": "1"
+      }
+    ]
+  },
+  "coverage": {
+    "createExtension": "covered",
+    "backgroundWorker": "not-applicable",
+    "clientExecutable": "not-applicable",
+    "serverLogAssertions": "not-applicable",
+    "upgrade": "not-covered"
+  },
+  "functionalScenarios": [
+    {
+      "id": "predicate-statistics-collected",
+      "description": "Executes real predicates and verifies predicate rows are collected and exposed through both pg_qualstats and pg_qualstats_pretty.",
+      "evidence": [
+        "sql-result"
+      ]
+    }
+  ]
+}
