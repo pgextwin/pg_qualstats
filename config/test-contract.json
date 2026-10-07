@@ -6,7 +6,7 @@
   },
   "runtimeRequirements": {
     "extensionCreation": "required",
-    "preload": "shared",
+    "preload": "optional",
     "backgroundWorker": false,
     "clientExecutable": {
       "required": false,
