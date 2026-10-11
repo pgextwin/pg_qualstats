@@ -4,7 +4,8 @@
   "upstream": {
     "repository": "powa-team/pg_qualstats",
     "ref": "2.1.4",
-    "version": "2.1.4"
+    "version": "2.1.4",
+    "commit": "ef98c7ec061301301c1cd92a0806cf8606bae3aa"
   },
   "postgresql": {
     "majors": [
