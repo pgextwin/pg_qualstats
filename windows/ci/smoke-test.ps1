@@ -13,6 +13,15 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# The legacy shared PGPORT 55432 falls inside the default Windows dynamic
+# TCP port range (49152-65535) and may be excluded on hosted CI images.
+# Select a deterministic port outside that range for this isolated smoke
+# cluster only; keep the PostgreSQL version, DLL and SQL validation unchanged.
+if ($PgPort -ge 49152 -and $PgPort -le 65535) {
+    Write-Host "Using smoke-test-only port 15432 instead of dynamic-range port $PgPort."
+    $PgPort = 15432
+}
+
 $initdb = Join-Path $PgRoot "bin\initdb.exe"
 $pgCtl = Join-Path $PgRoot "bin\pg_ctl.exe"
 $pgIsReady = Join-Path $PgRoot "bin\pg_isready.exe"
