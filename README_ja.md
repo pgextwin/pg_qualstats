@@ -1,127 +1,22 @@
-# pg_qualstats Windows バイナリ
+# pg_qualstats — Windows x64 バイナリ
 
-[English](README.md) | **日本語**
+[English](README.md) | 日本語
 
-このリポジトリでは、[pg_qualstats](https://github.com/powa-team/pg_qualstats) 2.1.4 の **非公式 Windows x64 バイナリ**を提供します。
+[pg_qualstats](https://github.com/powa-team/pg_qualstats)の**非公式Windows x64バイナリ**を配布しています。WHERE句やJOIN条件に現れる絞り込み条件の統計情報を収集します。
 
-pg_qualstatsは、SQLの `WHERE` 条件や `JOIN` 条件に現れるpredicate（絞り込み条件）の統計を収集するPostgreSQL Extensionです。頻繁に評価される条件、同時に利用される列、index候補の分析などに利用できます。
+## ダウンロードと対応環境
 
-## upstream
+[最新の公開Release](https://github.com/pgextwin/pg_qualstats/releases/latest)から、利用中のPostgreSQLメジャーバージョンに一致するZIPを選んでください。[過去のReleases](https://github.com/pgextwin/pg_qualstats/releases)も参照できます。PostgreSQL **14〜18**向けの配布状況は[pgextwinカタログ](https://pgextwin.github.io/website/ja/)に掲載しています。PostgreSQL 14のコミュニティサポートは2026年11月12日に終了します。
 
-- repository: `powa-team/pg_qualstats`
-- ref: `2.1.4`
-- version: 2.1.4
-- license: PostgreSQL-style（`LICENSE` 参照）
+## インストール
 
-pgextwinではPostgreSQL 14〜18をWindows x64で検証します。
+1. PostgreSQL環境のバックアップを取り、[上流ドキュメント](https://github.com/powa-team/pg_qualstats)で導入要件を確認します。
+2. 既存ファイルの置き換え前にPostgreSQLを停止します。対応するZIPに含まれるlib/とshare/extension/以下を、PostgreSQLの同名ディレクトリに配置します。
+3. PostgreSQLを起動し、利用するデータベースでCREATE EXTENSION pg_qualstats;を実行します。
+4. 統計情報の収集やリセットに必要な設定は、上流ドキュメントを確認してください。 本番環境への導入前に検証環境で動作を確認してください。
 
-現在のpgextwin Releaseは [`v2.1.4-windows.2`](https://github.com/pgextwin/pg_qualstats/releases/tag/v2.1.4-windows.2) です。
-
-ZIP名:
-
-~~~text
-pg_qualstats-2.1.4-pg14-windows-x64.zip
-...
-pg_qualstats-2.1.4-pg18-windows-x64.zip
-~~~
-
-## 導入
-
-1. PostgreSQLの**メジャーバージョンに一致するZIP**を選びます。
-2. PostgreSQLを停止します。
-3. `lib/pg_qualstats.dll` をPostgreSQLの `lib` へコピーします。
-4. `share/extension/*` をPostgreSQLの `share/extension` へコピーします。
-5. `shared_preload_libraries` に `pg_qualstats` を追加します。
-6. PostgreSQLを再起動します。
-7. 統計を利用するDBで次を実行します。
-
-~~~sql
-CREATE EXTENSION pg_qualstats;
-~~~
-
-設定例:
-
-~~~conf
-shared_preload_libraries = 'pg_qualstats'
-~~~
-
-すでに別Extensionをpreloadしている場合は、既存値を消さずカンマ区切りで追加してください。
-
-## 基本的な利用
-
-例えば次のようなpredicateを含むSQLを実行すると:
-
-~~~sql
-SELECT *
-FROM public.example
-WHERE status = 1;
-~~~
-
-条件の実行統計がpg_qualstatsへ蓄積されます。
-
-確認例:
-
-~~~sql
-SELECT * FROM pg_qualstats;
-SELECT * FROM pg_qualstats_pretty;
-~~~
-
-短時間の検証で全eligible queryをsampleしたい場合は `pg_qualstats.sample_rate = 1` を利用できます。本番ではoverheadやmemory利用に影響するため、upstreamドキュメントを確認して設定してください。
-
-## Windows build
-
-pg_qualstats 2.1.4は、対象PostgreSQLのheader/import libraryを使ってMSVC x64で直接compileします。
-
-pgextwinではbuild用の一時checkoutに対して、1点だけMSVC互換処理を行います。
-
-upstream 2.1.4では、互換用 `ShmemInitHash(...)` macroの引数中に `#if/#else` が存在します。GCCでは通りますが、MSVCはmacro引数の収集中にこのpreprocessor tokenを受け付けません。
-
-そこでpgextwinでは、同じhash flagを保ったまま条件分岐をmacro呼び出しの外側へ移動します。upstream sourceを恒久forkするものではありません。
-
-またDLL exportは次から明示生成します。
-
-- `Pg_magic_func`
-- `_PG_init`
-- upstreamの全 `PG_FUNCTION_INFO_V1(...)` 関数
-- 対応する全 `pg_finfo_<関数名>`
-
-build後に `dumpbin` で実際のexport tableも検証します。
-
-## CIの合格条件
-
-各PostgreSQL majorで次まで確認します。
-
-- upstream LICENSEの完全一致
-- `pg_qualstats.dll` のMSVC x64 build
-- DLL exportの明示検証
-- Extension fileの配置
-- `shared_preload_libraries=pg_qualstats` でPostgreSQL起動
-- `CREATE EXTENSION pg_qualstats`
-- probe table作成
-- 複数predicateの実行
-- `pg_qualstats` に対象tableのpredicate統計が記録されること
-- `pg_qualstats_pretty` から人間向け形式で統計を取得できること
-- Windows x64 ZIP生成
-
-単なるcompile成功やDLL loadだけでは合格にしません。
-
-## 主な設定
-
-upstreamで提供される主なGUC:
-
-- `pg_qualstats.enabled`
-- `pg_qualstats.track_constants`
-- `pg_qualstats.max`
-- `pg_qualstats.resolve_oids`
-- `pg_qualstats.track_pg_catalog`
-- `pg_qualstats.sample_rate`
-
-最適値はworkload、memory budget、必要な分析粒度で変わります。
-
-収集された統計はPostgreSQL serverのrestartをまたいで永続化されません。
+ダウンロードしたZIPはReleaseのSHA256SUMS.txtで照合できます。SPDX形式のSBOM、脆弱性レポート、署名付き証明の提供状況はReleaseで確認できます。
 
 ## ライセンス
 
-このrepositoryの `LICENSE` はupstream 2.1.4のLICENSEと同一です。Release ZIPにもbuildに使用したupstream checkoutからLICENSEを直接同梱します。
-
-本バイナリはpgextwinによる非公式配布であり、pg_qualstats、PoWA、PostgreSQLプロジェクトによる公式Windows binaryではありません。
+機能、設定、制限事項は上流の説明を参照してください。本配布は上流公式のWindows版ではありません。再配布条件は同梱のライセンス表記に従います。
