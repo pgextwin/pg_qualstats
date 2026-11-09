@@ -2,7 +2,7 @@
 
 ## 1. 対象
 
-pgextwinのpg_qualstats packageはWindows x64向けです。
+pgextwinのpg_qualstatsパッケージはWindows x64向けです。
 
 PostgreSQL 14〜18について、それぞれ専用ZIPを作成します。必ず対象PostgreSQLの**メジャーバージョンと一致するZIP**を使用してください。
 
@@ -61,7 +61,7 @@ WHERE extname = 'pg_qualstats';
 
 ## 5. 最小動作確認
 
-テスト用table:
+テスト用テーブル:
 
 ~~~sql
 CREATE TABLE public.pgqs_test (
@@ -74,7 +74,7 @@ SELECT g, g % 10
 FROM generate_series(1,1000) AS g;
 ~~~
 
-predicateを実行:
+検索条件を含むクエリを実行:
 
 ~~~sql
 SELECT count(*) FROM public.pgqs_test WHERE payload = 3;
@@ -90,7 +90,7 @@ FROM pg_qualstats
 WHERE lrelid = 'public.pgqs_test'::regclass;
 ~~~
 
-読みやすいview:
+読みやすい形式のビュー:
 
 ~~~sql
 SELECT *
@@ -109,7 +109,7 @@ pg_qualstats.sample_rate = 1
 
 とできます。
 
-本番で常時1にするとoverheadやmemory利用が増える可能性があります。通常運用ではupstreamのdefault/推奨とworkloadを確認して決定してください。
+本番環境で常に1に設定すると、処理の負荷やメモリ使用量が増える可能性があります。通常運用では、上流のデフォルト値・推奨値とワークロードを確認して決定してください。
 
 ## 7. track_constants
 
