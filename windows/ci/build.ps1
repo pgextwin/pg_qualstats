@@ -97,9 +97,16 @@ $defPath = Join-Path $UpstreamDir "pg_qualstats.pgextwin.def"
 $tempRoot = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { [IO.Path]::GetTempPath() }
 $cmdFile = Join-Path $tempRoot "pg_qualstats-build.cmd"
 
+$pgVersion = (& (Join-Path $PgRoot "bin\pg_config.exe") --version).Trim()
+if ($pgVersion -notmatch '^PostgreSQL\s+(14|15|16|17|18|19)(?:\.|\s)') {
+    throw "Unsupported PostgreSQL version: $pgVersion"
+}
+$clStdLine = if ([int]$Matches[1] -ge 19) { 'set "CL=/std:c11"' } else { '' }
+
 @"
 @echo off
 call "$vsDevCmd" -arch=x64 -host_arch=x64
+$clStdLine
 if errorlevel 1 exit /b %errorlevel%
 cd /d "$UpstreamDir"
 
